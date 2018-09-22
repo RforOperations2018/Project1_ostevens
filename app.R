@@ -7,7 +7,7 @@ library(shinythemes)
 library(countrycode)
 library(readr)
 library(readxl)
-
+library(DT)
 
 pdf(NULL)
 
@@ -74,7 +74,7 @@ sidebar <- dashboardSidebar(
                 multiple = TRUE,
                 selectize = TRUE,
                 selected = c("Americas")),
-    # Birth Selection
+    # Year
     sliderInput(inputId = "yearSelect",
                 label = "Year (2005-2016):",
                 min = min(happiness$year),
@@ -143,8 +143,17 @@ server <- function(input, output) {
   # Data table of countries
   output$table <- DT::renderDataTable({
     tabledisp <- hInput()
-    select(hInput(), country, year, happiness = life_ladder, gdp, social_support:perceptions_of_corruption, gini = gini_index_world_bank_estimate)
-  })
+    datatable(select(hInput(), country, year, happiness = life_ladder, gdp, social_support:perceptions_of_corruption, gini = gini_index_world_bank_estimate),  options = list(scrollX = TRUE)) %>%
+      formatCurrency(4, '$') %>%
+      formatRound(c(3,5), 3) %>%
+      formatRound('healthy_life_expectancy_at_birth', 1) %>%
+      formatPercentage('freedom_to_make_life_choices', 2)
+    
+
+    
+  
+    
+    })
   
   #happiness info box
   output$Happiness <- renderInfoBox({
