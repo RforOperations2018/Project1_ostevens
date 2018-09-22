@@ -7,7 +7,7 @@
 #    http://shiny.rstudio.com/
 #
 
-
+library(readxl)
 library(shiny)
 library(shinydashboard)
 library(reshape2)
@@ -23,8 +23,14 @@ pdf(NULL)
 
 
 origdata <- read_csv("laurel-world-happiness-report-data/data/data_behind_table_2_1_whr_2017.csv")
+money.wide <- read_excel("Download-GDPPCconstant-USD-countries.xls", 
+                         skip = 2)
+money.long <- melt(money.wide, id.vars = c("CountryID","Country"))
 
-
+origdata <- mutate(origdata, year = as.character(year))
+origdata <- left_join(origdata, money.long, by = c("country" = "Country", "year" = "variable"))
+origdata <- mutate(origdata, gdp = value)
+  
 happiness.load <- origdata %>%
   mutate(confidence_in_gov = confidence_in_national_government, 
          Gini_Income = gini_of_household_income_reported_in_gallup_by_wp5_year, 
@@ -33,7 +39,8 @@ happiness.load <- origdata %>%
          region = countrycode(sourcevar = country, origin = "country.name", destination = "region"),
          continent = as.factor(ifelse(country == "Kosovo", "Europe", as.character(continent))),
          region = as.factor(ifelse(country == "Kosovo", "Southern Europe", as.character(region)))) %>%
-  select(country:perceptions_of_corruption, Gini_Income, Gini_Average, confidence_in_gov, continent, region)
+  select(country:perceptions_of_corruption, Gini_Income, Gini_Average, confidence_in_gov, continent, region, gdp)
+
 
 
 # ggplot(twenty16, aes(x = reorder(country, -life_ladder), y = life_ladder, fill = continent)) + geom_bar(stat = "identity")
