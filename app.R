@@ -115,8 +115,8 @@ server <- function(input, output) {
       # Year Filter
       filter(year == input$yearSelect)
     # Continent Filter
-    if (input$continentSelect != "All") {
-      happiness <- subset(happiness, continent %in% input$continentSele)
+    if (length(input$continentSelect) > 0 ) {
+      happiness <- subset(happiness, continent %in% input$continentSelect)
     }
     return(happiness)
   })
