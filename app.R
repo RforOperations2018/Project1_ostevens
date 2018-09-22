@@ -75,13 +75,11 @@ sidebar <- dashboardSidebar(
                 selectize = TRUE,
                 selected = c("Americas")),
     # Birth Selection
-    dateInput(inputId = "yearSelect",
-              label = "Select Year(s):",
-              value = "2016-01-01",
-              min = min(happiness.load$year_date, na.rm = T),
-              max = max(happiness.load$year_date, na.rm = T),
-              format = "yyyy",
-              startview = "decade")
+    sliderInput(inputId = "yearSelect",
+                label = "Year (2005-2016):",
+                min = min(happiness$year),
+                max = max(happiness$year),
+                value = max(happiness$year),step = 1,round = T, sep = '')
   )
 )
 
