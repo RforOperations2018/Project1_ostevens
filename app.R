@@ -7,19 +7,21 @@
 #    http://shiny.rstudio.com/
 #
 
-library(tidyverse)
-library(countrycode)
-library(plotly)
+
 library(shiny)
+library(shinydashboard)
 library(reshape2)
 library(dplyr)
-library(tidyverse)
+library(plotly)
 library(shinythemes)
-library(stringr)
-library(shinythemes)
-library(shinydashboard)
-
+library(countrycode)
 library(readr)
+
+
+pdf(NULL)
+
+
+
 origdata <- read_csv("laurel-world-happiness-report-data/data/data_behind_table_2_1_whr_2017.csv")
 
 
@@ -29,15 +31,104 @@ happiness <- origdata %>%
          Gini_Average = gini_index_world_bank_estimate_average_2000_13,
          continent = countrycode(sourcevar = country, origin = "country.name",destination = "continent"),
          region = countrycode(sourcevar = country, origin = "country.name", destination = "region"),
-         continent = as.factor(ifelse(country == "Kosovo", "Europe", as.character(continent)))) %>%
+         continent = as.factor(ifelse(country == "Kosovo", "Europe", as.character(continent))),
+         region = as.factor(ifelse(country == "Kosovo", "Southern Europe", as.character(region)))) %>%
   select(country:perceptions_of_corruption, Gini_Income, Gini_Average, confidence_in_gov, continent, region)
 
 
-
+# ggplot(twenty16, aes(x = reorder(country, -life_ladder), y = life_ladder, fill = continent)) + geom_bar(stat = "identity")
 
 # ggplot(twenty16, aes(x = reorder(continent, -life_ladder), life_ladder, fill = continent)) + stat_summary(fun.y = "mean", geom = "bar")
 
-# ggplot(twenty16, aes(x = reorder(country, -life_ladder), y = life_ladder, fill = continent)) + geom_bar(stat = "identity")
+
+
+# Building a header
+header <- dashboardHeader(title = "Global Happiness Dashboard",
+                          dropdownMenu(type = "notifications",
+                                       notificationItem(text = "This text is larger than you can see when you click. But: Who's happy? Who's miserable?", 
+                                                        icon = icon("users"))
+                          ),
+                          dropdownMenu(type = "tasks", badgeStatus = "success",
+                                       taskItem(value = 10, color = "green",
+                                                text =  "Figure out: does money correlate with happiness?")
+                          ),
+                          dropdownMenu(type = "messages",
+                                       messageItem(
+                                         from = "Owen",
+                                         message = HTML("Thankyou, esteemed user, for using this app. Reach out to ostevens@andrew.cmu.edu for more information"),
+                                         icon = icon("exclamation-circle"))
+                          )
+)
+
+#Assign dashboard sidebar
+sidebar <- dashboardSidebar(
+  sidebarMenu(
+    id = "tabs",
+    menuItem("Plot", icon = icon("bar-chart"), tabName = "plot"),
+    menuItem("Table", icon = icon("table"), tabName = "table", badgeLabel = "new", badgeColor = "green"),
+    selectInput("continentSelect",
+                "Continent:",
+                choices = c("All",sort(unique(happiness$continent))),
+                multiple = TRUE,
+                selectize = TRUE,
+                selected = c("Americas")),
+    # Birth Selection
+    dateInput(inputId = "yearSelect",
+              label = "Select Year(s):",
+              value = 2016,
+              min = min(happiness$year, na.rm = T),
+              max = max(happiness$year, na.rm = T),
+              format = "yyyy",
+              startview = "decade"
+    )
+  )
+)
 
 
 
+
+
+
+
+
+
+
+# # Define UI for application that draws a histogram
+# ui <- fluidPage(
+#    
+#    # Application title
+#    titlePanel("Old Faithful Geyser Data"),
+#    
+#    # Sidebar with a slider input for number of bins 
+#    sidebarLayout(
+#       sidebarPanel(
+#          sliderInput("bins",
+#                      "Number of bins:",
+#                      min = 1,
+#                      max = 50,
+#                      value = 30)
+#       ),
+#       
+#       # Show a plot of the generated distribution
+#       mainPanel(
+#          plotOutput("distPlot")
+#       )
+#    )
+# )
+# 
+# # Define server logic required to draw a histogram
+# server <- function(input, output) {
+#    
+#    output$distPlot <- renderPlot({
+#       # generate bins based on input$bins from ui.R
+#       x    <- faithful[, 2] 
+#       bins <- seq(min(x), max(x), length.out = input$bins + 1)
+#       
+#       # draw the histogram with the specified number of bins
+#       hist(x, breaks = bins, col = 'darkgray', border = 'white')
+#    })
+# }
+# 
+# # Run the application 
+# shinyApp(ui = ui, server = server)
+# 
