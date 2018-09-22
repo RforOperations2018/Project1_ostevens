@@ -39,7 +39,7 @@ happiness.load <- origdata %>%
          region = countrycode(sourcevar = country, origin = "country.name", destination = "region"),
          continent = as.factor(ifelse(country == "Kosovo", "Europe", as.character(continent))),
          region = as.factor(ifelse(country == "Kosovo", "Southern Europe", as.character(region)))) %>%
-  select(country:perceptions_of_corruption, Gini_Income, Gini_Average, confidence_in_gov, continent, region, gdp)
+  select(country:perceptions_of_corruption, Gini_Income, Gini_Average, gini_index_world_bank_estimate, confidence_in_gov, continent, region, gdp)
 
 
 
@@ -95,8 +95,8 @@ sidebar <- dashboardSidebar(
 body <- dashboardBody(tabItems(
   tabItem("plot",
           fluidRow(
-            infoBoxOutput("GDP"),
-            valueBoxOutput("Happiness")
+            infoBoxOutput("Happiness"),
+            valueBoxOutput("GDP")
           ),
           fluidRow(
             tabBox(title = "Plot",
@@ -142,6 +142,35 @@ server <- function(input, output) {
     })
   
   #plot showing gdp by country
+  output$plot_gdp <- renderPlotly({
+    data <- hInput()
+    ggplot(data = data, aes(x = reorder(country, gdp), y = gdp, fill = continent)) + 
+      geom_bar(stat = "identity")
+  })
+  
+  # Data table of countries
+  output$table <- DT::renderDataTable({
+    tabledisp <- hInput()
+    select(hInput(), country, year, happiness = life_ladder, gdp, social_support:perceptions_of_corruption, gini = gini_index_world_bank_estimate)
+  })
+  
+  #happiness info box
+  output$Happiness <- renderInfoBox({
+    h <- hInput()
+    happiest <- h[which.max(h$life_ladder), 'country']
+    infoBox("Happiest country",value = happiest, subtitle = paste(nrow(h), "countries"), icon = icon("smile-beam"), color = "purple")
+  })
+  
+  #GDP info box
+  output$GDP <- renderValueBox({
+    h <- hinput()
+    num <- round(mean(h$gdp, na.rm = T), 2)
+    valueBox(subtitle = "Avg GDP Per Capita", value = num, icon("sort-numeric-asc"), color = "green")
+  })
+}  
+
+  
+  
   
     
       
