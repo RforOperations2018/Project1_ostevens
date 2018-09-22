@@ -25,7 +25,7 @@ pdf(NULL)
 origdata <- read_csv("laurel-world-happiness-report-data/data/data_behind_table_2_1_whr_2017.csv")
 
 
-happiness <- origdata %>%
+happiness.load <- origdata %>%
   mutate(confidence_in_gov = confidence_in_national_government, 
          Gini_Income = gini_of_household_income_reported_in_gallup_by_wp5_year, 
          Gini_Average = gini_index_world_bank_estimate_average_2000_13,
@@ -84,6 +84,7 @@ sidebar <- dashboardSidebar(
   )
 )
 
+#Body!
 body <- dashboardBody(tabItems(
   tabItem("plot",
           fluidRow(
@@ -104,6 +105,42 @@ body <- dashboardBody(tabItems(
 )
 )
 
+# Server section
+ui <- dashboardPage(header, sidebar, body)
+
+# Define server logic
+server <- function(input, output) {
+  # Reactive input data
+  hInput <- reactive({
+    happiness <- happiness.load %>%
+      # Year Filter
+      filter(year == input$yearSelect)
+    # Continent Filter
+    if (input$continentSelect != "All") {
+      happiness <- subset(happiness, continent %in% input$continentSele)
+    }
+    return(happiness)
+  })
+  # Reactive melted data
+  mhInput <- reactive({
+    hInput() %>%
+      melt(id = "country")
+  })
+  
+  # plot showing happiness by country
+  output$plot_happiness <- renderPlotly({
+    dat <- hInput()
+    ggplot(data = dat, aes(x = reorder(country, -life_ladder), y = life_ladder, fill = continent)) +
+      geom_bar(stat = "identity")
+    })
+  
+  #plot showing gdp by country
+  
+    
+      
+      
+
+    
 
 
 
