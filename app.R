@@ -7,7 +7,6 @@
 #    http://shiny.rstudio.com/
 #
 
-library(readxl)
 library(shiny)
 library(shinydashboard)
 library(reshape2)
@@ -16,6 +15,7 @@ library(plotly)
 library(shinythemes)
 library(countrycode)
 library(readr)
+library(readxl)
 
 
 pdf(NULL)
@@ -169,7 +169,8 @@ server <- function(input, output) {
   })
 }  
 
-  
+# Run the application 
+shinyApp(ui = ui, server = server)
   
   
     
