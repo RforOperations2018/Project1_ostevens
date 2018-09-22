@@ -1,12 +1,3 @@
-#
-# This is a Shiny web application. You can run the application by clicking
-# the 'Run App' button above.
-#
-# Find out more about building applications with Shiny here:
-#
-#    http://shiny.rstudio.com/
-#
-
 library(shiny)
 library(shinydashboard)
 library(reshape2)
@@ -37,9 +28,12 @@ happiness.load <- origdata %>%
          Gini_Average = gini_index_world_bank_estimate_average_2000_13,
          continent = countrycode(sourcevar = country, origin = "country.name",destination = "continent"),
          region = countrycode(sourcevar = country, origin = "country.name", destination = "region"),
-         continent = as.factor(ifelse(country == "Kosovo", "Europe", as.character(continent))),
-         region = as.factor(ifelse(country == "Kosovo", "Southern Europe", as.character(region)))) %>%
-  select(country:perceptions_of_corruption, Gini_Income, Gini_Average, gini_index_world_bank_estimate, confidence_in_gov, continent, region, gdp)
+         continent = as.character(ifelse(country == "Kosovo", "Europe", as.character(continent))),
+         region = as.factor(ifelse(country == "Kosovo", "Southern Europe", as.character(region))),
+         year_date = as.Date(ISOdate(year, 1, 1))) %>%
+  select(country:perceptions_of_corruption, Gini_Income, Gini_Average, gini_index_world_bank_estimate, confidence_in_gov, continent, region, gdp, year_date)
+
+
 
 
 
@@ -67,6 +61,7 @@ header <- dashboardHeader(title = "Global Happiness Dashboard",
                           )
 )
 
+
 #Assign dashboard sidebar
 sidebar <- dashboardSidebar(
   sidebarMenu(
@@ -75,19 +70,18 @@ sidebar <- dashboardSidebar(
     menuItem("Table", icon = icon("table"), tabName = "table", badgeLabel = "new", badgeColor = "green"),
     selectInput("continentSelect",
                 "Continent:",
-                choices = c("All",sort(unique(happiness$continent))),
+                choices = c(sort(unique(happiness.load$continent))),
                 multiple = TRUE,
                 selectize = TRUE,
                 selected = c("Americas")),
     # Birth Selection
     dateInput(inputId = "yearSelect",
               label = "Select Year(s):",
-              value = 2016,
-              min = min(happiness$year, na.rm = T),
-              max = max(happiness$year, na.rm = T),
+              value = "2016-01-01",
+              min = min(happiness.load$year_date, na.rm = T),
+              max = max(happiness.load$year_date, na.rm = T),
               format = "yyyy",
-              startview = "decade"
-    )
+              startview = "decade")
   )
 )
 
@@ -163,7 +157,7 @@ server <- function(input, output) {
   
   #GDP info box
   output$GDP <- renderValueBox({
-    h <- hinput()
+    h <- hInput()
     num <- round(mean(h$gdp, na.rm = T), 2)
     valueBox(subtitle = "Avg GDP Per Capita", value = num, icon("sort-numeric-asc"), color = "green")
   })
