@@ -84,6 +84,26 @@ sidebar <- dashboardSidebar(
   )
 )
 
+body <- dashboardBody(tabItems(
+  tabItem("plot",
+          fluidRow(
+            infoBoxOutput("GDP"),
+            valueBoxOutput("Happiness")
+          ),
+          fluidRow(
+            tabBox(title = "Plot",
+                   width = 12,
+                   tabPanel("GDP", plotlyOutput("plot_gdp")),
+                   tabPanel("Happiness", plotlyOutput("plot_happiness")))
+          )
+  ),
+  tabItem("table",
+          fluidPage(
+            box(title = "Country Stats", DT::dataTableOutput("table"), width = 12))
+  )
+)
+)
+
 
 
 
