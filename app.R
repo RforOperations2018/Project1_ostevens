@@ -11,8 +11,6 @@ library(DT)
 
 pdf(NULL)
 
-
-
 origdata <- read_csv("laurel-world-happiness-report-data/data/data_behind_table_2_1_whr_2017.csv")
 money.wide <- read_excel("Download-GDPPCconstant-USD-countries.xls", 
                          skip = 2)
@@ -62,12 +60,13 @@ header <- dashboardHeader(title = "Global Happiness Dashboard",
 )
 
 
+
 #Assign dashboard sidebar
 sidebar <- dashboardSidebar(
   sidebarMenu(
     id = "tabs",
     menuItem("Plot", icon = icon("bar-chart"), tabName = "plot"),
-    menuItem("Table", icon = icon("table"), tabName = "table", badgeLabel = "new", badgeColor = "green"),
+    menuItem("Table", icon = icon("table"), tabName = "table"),
     selectInput("continentSelect",
                 "Continent:",
                 choices = c(sort(unique(happiness.load$continent))),
@@ -79,7 +78,8 @@ sidebar <- dashboardSidebar(
                 label = "Year (2005-2016):",
                 min = min(happiness$year),
                 max = max(happiness$year),
-                value = max(happiness$year),step = 1,round = T, sep = '')
+                value = max(happiness$year),step = 1,round = T, sep = ''),
+    menuItem("Scatterplots", tabName = "scatter",badgeLabel = "new", badgeColor = "green")
   )
 )
 
@@ -93,16 +93,31 @@ body <- dashboardBody(tabItems(
           fluidRow(
             tabBox(title = "Plot",
                    width = 12,
-                   tabPanel("GDP", plotlyOutput("plot_gdp")),
-                   tabPanel("Happiness", plotlyOutput("plot_happiness")))
+                   tabPanel("GDP", plotlyOutput("plot_gdp"),plotlyOutput("regionalgdp")),
+                   tabPanel("Happiness", plotlyOutput("plot_happiness"), plotlyOutput("regionalhap")))
           )
   ),
   tabItem("table",
           fluidPage(
             box(title = "Country Stats", DT::dataTableOutput("table"), width = 12))
-  )
-)
-)
+  ),
+  tabItem("scatter",
+          fluidPage(
+            inputPanel(
+              # Select Y
+              selectInput("y",
+                          "Y Axis:",
+                          #choices = c(choices = str_to_title(str_replace_all(names, "_"," ")) = colnames(happiness)),
+                          choices = colnames(happiness.load)[c(-(1:2))],
+                          selected = "life_ladder"),
+              selectInput("x",
+                          "X Axis:",
+                          choices = colnames(happiness.load)[c(-(1:2))],
+                          selected = "gdp")
+            ),
+            fluidRow(
+              plotlyOutput("scatterplot")
+            )))))
 
 # Server section
 ui <- dashboardPage(header, sidebar, body)
@@ -122,16 +137,31 @@ server <- function(input, output) {
   })
   # Reactive melted data
   mhInput <- reactive({
-    hInput() %>%
-      melt(id = "country")
+    mhInput() %>%
+      melt(c("country", input$x, input$y, "continent"))
   })
+  
+  
+  output$scatterplot <- renderPlotly({
+    ggplot(hInput(), aes_string(x = input$x, y = input$y, color = "continent")) +
+               geom_point() +
+               theme(legend.position = "top")
+    
+                
+              
+              
+  })
+    
+  
+  
   
   # plot showing happiness by country
   output$plot_happiness <- renderPlotly({
     dat <- hInput()
     ggplot(data = dat, aes(x = reorder(country, -life_ladder), y = life_ladder, fill = continent), text =      paste("country:", country)) +
       geom_bar(stat = "identity") +
-      theme(axis.text.x = element_text(angle = 90, hjust = 1))
+      theme(axis.text.x = element_text(angle = 90, hjust = 1))+
+      labs(y = "Happiness (out of 10)", x = "Country", title = "Avg. Happiness by Country")
     })
   
   #plot showing gdp by country
@@ -139,8 +169,29 @@ server <- function(input, output) {
     data <- hInput()
     ggplot(data = data, aes(x = reorder(country, gdp), y = gdp, fill = continent)) + 
       geom_bar(stat = "identity") +
-      theme(axis.text.x = element_text(angle = 90, hjust = 1))
+      theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+      labs(y = "GDP per capita", x = "Country", title = "GDP by Country")
   })
+  
+
+    # GDP broken down by regino
+    output$regionalgdp <- renderPlotly({
+      data <- hInput()
+      ggplot(data, aes(x = reorder(region, -gdp),y = gdp, fill = continent)) +
+        stat_summary(fun.y = "mean", geom = "bar") +
+        labs(y = "Average Happiness", x = "Region", title = "Avg. GDP by Region") +
+        guides(fill = FALSE)
+})
+    
+    # Happiness broken down by region
+    output$regionalhap <- renderPlotly({
+      data <- hInput()
+      ggplot(data, aes(x = reorder(region, -life_ladder), life_ladder, fill = continent)) +
+        stat_summary(fun.y = "mean", geom = "bar") +
+        labs(y = "Avg GDP per capita", x = "Region", title = "Avg. Happiness by Region") +
+        guides(fill = FALSE)
+    })
+
   
   # Data table of countries
   output$table <- DT::renderDataTable({
@@ -150,11 +201,6 @@ server <- function(input, output) {
       formatRound(c(3,5), 3) %>%
       formatRound('healthy_life_expectancy_at_birth', 1) %>%
       formatPercentage('freedom_to_make_life_choices', 2)
-    
-
-    
-  
-    
     })
   
   #happiness info box
@@ -172,11 +218,14 @@ server <- function(input, output) {
   })
 }  
 
+
+
+
 # Run the application 
 shinyApp(ui = ui, server = server)
   
   
-    
+
       
       
 
