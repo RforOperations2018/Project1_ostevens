@@ -87,7 +87,7 @@ sidebar <- dashboardSidebar(
 body <- dashboardBody(tabItems(
   tabItem("plot",
           fluidRow(
-            infoBoxOutput("Happiness"),
+            infoBoxOutput("Happiness",width = 6),
             valueBoxOutput("GDP")
           ),
           fluidRow(
@@ -129,15 +129,17 @@ server <- function(input, output) {
   # plot showing happiness by country
   output$plot_happiness <- renderPlotly({
     dat <- hInput()
-    ggplot(data = dat, aes(x = reorder(country, -life_ladder), y = life_ladder, fill = continent)) +
-      geom_bar(stat = "identity")
+    ggplot(data = dat, aes(x = reorder(country, -life_ladder), y = life_ladder, fill = continent), text =      paste("country:", country)) +
+      geom_bar(stat = "identity") +
+      theme(axis.text.x = element_text(angle = 90, hjust = 1))
     })
   
   #plot showing gdp by country
   output$plot_gdp <- renderPlotly({
     data <- hInput()
     ggplot(data = data, aes(x = reorder(country, gdp), y = gdp, fill = continent)) + 
-      geom_bar(stat = "identity")
+      geom_bar(stat = "identity") +
+      theme(axis.text.x = element_text(angle = 90, hjust = 1))
   })
   
   # Data table of countries
@@ -159,7 +161,7 @@ server <- function(input, output) {
   output$Happiness <- renderInfoBox({
     h <- hInput()
     happiest <- h[which.max(h$life_ladder), 'country']
-    infoBox("Happiest country",value = happiest, subtitle = paste(nrow(h), "countries"), icon = icon("smile-beam"), color = "purple")
+    infoBox("Happiest country",value = happiest, subtitle = paste('Out of', nrow(h), "countries"), icon = icon("smile-o"), color = "purple")
   })
   
   #GDP info box
