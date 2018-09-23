@@ -207,7 +207,7 @@ server <- function(input, output) {
   output$Happiness <- renderInfoBox({
     h <- hInput()
     happiest <- h[which.max(h$life_ladder), 'country']
-    infoBox("Happiest country",value = happiest, subtitle = paste('Out of', nrow(h), "countries"), icon = icon("smile-o"), color = "purple")
+    infoBox("Happiest country",value = happiest, subtitle = paste('Out of', nrow(h), "selected countries"), icon = icon("smile-o"), color = "purple")
   })
   
   #GDP info box
