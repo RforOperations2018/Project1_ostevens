@@ -5,8 +5,8 @@ account: owens
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 463935
-bundleId: 1600242
+bundleId: 1600245
 url: https://owens.shinyapps.io/project1/
-when: 1537669324.63209
+when: 1537669481.57174
 asMultiple: FALSE
 asStatic: FALSE
