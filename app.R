@@ -79,6 +79,7 @@ sidebar <- dashboardSidebar(
                 min = min(happiness$year),
                 max = max(happiness$year),
                 value = max(happiness$year),step = 1,round = T, sep = ''),
+    # This scared me being down here!
     menuItem("Scatterplots", tabName = "scatter",badgeLabel = "new", badgeColor = "green")
   )
 )
@@ -89,6 +90,7 @@ body <- dashboardBody(tabItems(
           fluidRow(
             infoBoxOutput("Happiness",width = 6),
             valueBoxOutput("GDP")
+            # Now it doesn't have to go on this page, but you're missing the third value/Info/gauge
           ),
           fluidRow(
             tabBox(title = "Plot",
@@ -108,6 +110,7 @@ body <- dashboardBody(tabItems(
               selectInput("y",
                           "Y Axis:",
                           #choices = c(choices = str_to_title(str_replace_all(names, "_"," ")) = colnames(happiness)),
+                          # Your choices don't plot in all cases. You might have been better off only letting people choose one of the axis, probably Y.
                           choices = colnames(happiness.load)[c(-(1:2))],
                           selected = "life_ladder"),
               selectInput("x",
